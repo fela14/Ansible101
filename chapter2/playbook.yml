@@ -1,0 +1,16 @@
+---
+
+- hosts: all
+  become: yes
+  tasks:
+    - name: Ensure NTP is installed.
+      yum:
+        name: chrony
+        state: present
+      when: ansible_distribution == "CentOS"
+    - name: Ensure NTP is installed
+      service:
+        name: chrony
+        state: started
+        enabled: yes
+      when: ansible_distribution == "CentOS"

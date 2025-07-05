@@ -1,0 +1,82 @@
+---
+
+- name: Install apache
+  hosts: all
+  become: true
+
+  vars:
+    proxy_vars:
+      http_proxy: http://example-proxy:80/
+      https_proxy: https://example-proxy:80/
+#    apache_package: httpd
+#    apache_service: httpd
+#    apache_config_dir: /etc/httpd/conf.d/test.conf
+#    profile: ~/.bash_profile
+#    apache_package: apache2
+#    apache_service: apache2
+#    apache_config_dir: /etc/apache2/sites-enabled
+#    profile: ~/.profile
+
+#  vars_file:
+#    - vars/main.yml
+#     - vars/apache_default.yml
+#     - vars/apache_{{ ansible_os_family }}.yml
+
+#  environment:
+#    http_proxy: http://example-proxy:80/
+#    https_proxy: https://example-proxy:80/
+
+  handlers:
+    - import_tasks: handlers/apache.yml
+
+  pre_tasks:
+    - debug: var=ansible_os_family
+    - name: Load variable files.
+      include_vars: "{{ item }}"
+      with_first_found:
+        - "vars/apache_default.yml"
+        - "vars/apache_{{ ansible_os_family }}.yml"
+
+  tasks:
+
+#    - name: Download a file
+#      get_url:
+#        url: https://ipv4.download.thinkbroadband.com/5MB.zip
+#        dest: /tmp
+#      environment: proxy_vars
+
+    - name: Add an environment variable to the user's remote shell.
+      lineinfile:
+        dest: "{{ profile }}"
+        regexp: "^ENV_VAR="
+        line: "ENV_VAR=value"
+      become: false
+
+    - name: Get the value of an environment variable
+      shell: "source {{ profile }}  && echo $ENV_VAR"
+      register: foo
+
+    - debug: msg="The variable is {{ foo.stdout }}"
+
+    - name: Ensure apache is installed
+      yum:
+        name: "{{ apache_package }}"
+        state: present
+
+    - name: Copy test config file
+      copy:
+        src: test.conf
+        dest: "{{ apache_config_dir }}"
+#        notify: 
+#          - restart apache
+#          - restart memcached
+    - name: Make sure handlers are flushed immediately
+      meta: flush_handlers
+
+#    - name: Ensure apache is running
+#      service:
+#        name: "{{ apache_service }}"
+#        state: started
+#        enabled: yes
+
+#    - fail

@@ -1,0 +1,6 @@
+---
+
+- hosts: centos
+  tasks:
+    - name: Date
+      command: date

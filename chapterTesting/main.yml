@@ -1,0 +1,16 @@
+---
+
+- name: Ansible-lint test
+  hosts: centos
+  gather_facts: false
+
+  tasks:
+    - name: Get system uptime to demo how this works.
+      command: uptime
+      changed_when: false
+      register: system_uptime
+
+    - name: Print the registeered output of the 'uptime' command.
+      debug:
+        var: system_uptime.stdout
+      when: system_uptime.changed

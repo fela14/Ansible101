@@ -1,0 +1,10 @@
+---
+
+- name: Verify
+  hosts: all
+
+  tasks:
+    - name: Verify apache is serving web requests
+      uri:
+        url: https://172.22.0.2
+        status_code: 200

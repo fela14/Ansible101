@@ -1,0 +1,16 @@
+# Application servers
+[app]
+172.22.0.2
+
+# Database server
+[db]
+172.22.0.3
+
+[solr]
+172.21.0.3
+
+# Group has all the servers
+[multi:children]
+app
+db
+solr

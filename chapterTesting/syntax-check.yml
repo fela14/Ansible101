@@ -1,0 +1,12 @@
+---
+
+- hosts: centos
+  gather_facts: false
+
+  tasks:
+    - include_tasks: date.yml
+#    - import_tasks: free.yml
+
+    - name: Print a debug message.
+      debug:
+        msg: "Hello there"

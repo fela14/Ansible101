@@ -1,0 +1,30 @@
+---
+#    - name: Download a file
+#      get_url:
+#        url: https://ipv4.download.thinkbroadband.com/5MB.zip
+#        dest: /tmp
+#      environment: proxy_vars
+
+
+- name: Ensure apache is installed
+  yum:
+    name: "{{ apache_package }}"
+    state: present
+
+- name: Copy test config file
+  copy:
+    src: test.conf
+    dest: "{{ apache_config_dir }}"
+#        notify: 
+#          - restart apache
+#          - restart memcached
+- name: Make sure handlers are flushed immediately
+  meta: flush_handlers
+
+#    - name: Ensure apache is running
+#      service:
+#        name: "{{ apache_service }}"
+#        state: started
+#        enabled: yes
+
+#    - fail
