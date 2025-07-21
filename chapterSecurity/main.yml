@@ -1,0 +1,107 @@
+---
+- hosts: centos
+  become: true
+
+  handlers:
+    - name: restart ssh
+      service:
+        name: ssh
+        state: restart
+
+  tasks:
+#    - meta: noop
+
+    - name: Ensure SELinux Python Library is installed
+      yum:
+        name: python3-libselinux
+        state: present
+      become: true
+
+    - name: Tell SELinux about SSH's new port
+      seport:
+        ports: 2849
+        proto: tcp
+        setype: ssh_port_t
+        state: present
+        validate: sshd -T -f %s
+
+    - name: Make sure SSH is more secure.
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+      with_items:
+        regexp: "^PasswordAuthentication"
+        line: "PasswordAuthentication no"
+        regexp: "^PermitRootLogin"
+        line: "PermitRootLogin no"
+        regexp: "^Port"
+        line: "Port 2849"
+      notify: restart ssh
+
+    - name: Add user Johndoe.
+      user:
+        name: Johndoe
+
+    - name: Add sudo group rights for deployment user.
+      lineinfile:
+        dest: /etc/sudoers
+        regexp: "^Johndoe"
+        line: "Johndoe ALL=(ALL) NOPASSWD: ALL"
+        state: present
+        validate: "visudo -cf %s"
+
+    - name: Remove unused packages.
+      package:
+        name:
+          - httpd
+          - nano
+          - mailutils
+        state: absent
+
+    - name: Edit file permissions.
+      file:
+        path: /etc/ssh/sshd_config
+        mode: 0600
+
+    - name: Make sure everything's up to date
+      yum:
+        name: '*'
+        state: latest
+#      apt:
+#        upgrade: dist
+#        update_cache: yes
+
+    - name: Set up autoupdates.
+      yum:
+        name: yum-cron # (dnf-automatic for centos 8, unattended-upgrades for debian)
+        state: present
+
+    - name: Ensure autoupdates are running.
+      service:
+        name: yum-cron # (dnf-automatic install-timer)
+        state: started
+        enabled: yes
+
+    - name: Install firewalld.
+      package:
+        name: firewalld
+        state: present
+
+    - name: Ensure firewalld is running.
+      service:
+        name: firewalld
+        state: started
+        enabled: yes
+
+    - name: Configure ports in firewall.
+      firewalld:
+        state: "{{ item.state }}"
+        port: "{{ item.port }}"
+        zone: external
+        immediate: yes
+        permanent: yes
+      with_items:
+        - { state: 'enabled', port: 2849/tcp }
+        - { state: 'enabled', port: 123/udp }

@@ -1,0 +1,5 @@
+[centos]
+172.22.0.2
+
+[centos:vars]
+ansible_user=ansible
